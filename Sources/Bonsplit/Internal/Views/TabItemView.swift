@@ -20,6 +20,10 @@ enum TabItemStyling {
         hasRasterIcon ? 1.0 : tabSaturation
     }
 
+    static func shouldShowHoverBackground(isHovered: Bool, isSelected: Bool) -> Bool {
+        isHovered && !isSelected
+    }
+
     static func resolvedFaviconImage(existing: NSImage?, incomingData: Data?) -> NSImage? {
         guard let incomingData else { return nil }
         if let decoded = NSImage(data: incomingData) {
@@ -360,7 +364,7 @@ struct TabItemView: View {
     private var tabBackground: some View {
         ZStack(alignment: .top) {
             // Background fill (hover)
-            if isHovered {
+            if TabItemStyling.shouldShowHoverBackground(isHovered: isHovered, isSelected: isSelected) {
                 Rectangle()
                     .fill(TabBarColors.hoveredTabBackground(for: appearance))
             } else {

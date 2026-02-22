@@ -427,4 +427,16 @@ final class BonsplitTests: XCTestCase {
         let resolved = TabItemStyling.resolvedFaviconImage(existing: existing, incomingData: nil)
         XCTAssertNil(resolved)
     }
+
+    func testSelectedTabNeverShowsHoverBackground() {
+        XCTAssertFalse(
+            TabItemStyling.shouldShowHoverBackground(isHovered: true, isSelected: true)
+        )
+        XCTAssertTrue(
+            TabItemStyling.shouldShowHoverBackground(isHovered: true, isSelected: false)
+        )
+        XCTAssertFalse(
+            TabItemStyling.shouldShowHoverBackground(isHovered: false, isSelected: false)
+        )
+    }
 }
