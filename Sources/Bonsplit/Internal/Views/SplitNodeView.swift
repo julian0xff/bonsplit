@@ -70,6 +70,8 @@ struct SinglePaneWrapper<Content: View, EmptyContent: View>: NSViewRepresentable
         hostingController.view.translatesAutoresizingMaskIntoConstraints = false
 
         let containerView = PaneDragContainerView()
+        containerView.wantsLayer = true
+        containerView.layer?.masksToBounds = true
         containerView.addSubview(hostingController.view)
 
         NSLayoutConstraint.activate([
@@ -89,6 +91,8 @@ struct SinglePaneWrapper<Content: View, EmptyContent: View>: NSViewRepresentable
         // Hide the container when inactive so AppKit's drag routing doesn't deliver
         // drag sessions to views belonging to background workspaces.
         nsView.isHidden = !controller.isInteractive
+        nsView.wantsLayer = true
+        nsView.layer?.masksToBounds = true
 
         let paneView = PaneContainerView(
             pane: pane,
