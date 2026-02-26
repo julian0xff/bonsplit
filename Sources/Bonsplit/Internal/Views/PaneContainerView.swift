@@ -284,24 +284,9 @@ struct UnifiedPaneDropDelegate: DropDelegate {
     @Binding var activeDropZone: DropZone?
     @Binding var dropLifecycle: PaneDropLifecycle
 
-    // Calculate zone based on position within the view
+    // Calculate zone based on position within the view.
     private func zoneForLocation(_ location: CGPoint) -> DropZone {
-        let edgeRatio: CGFloat = 0.25
-        let horizontalEdge = max(80, size.width * edgeRatio)
-        let verticalEdge = max(80, size.height * edgeRatio)
-
-        // Check edges first (left/right take priority at corners)
-        if location.x < horizontalEdge {
-            return .left
-        } else if location.x > size.width - horizontalEdge {
-            return .right
-        } else if location.y < verticalEdge {
-            return .top
-        } else if location.y > size.height - verticalEdge {
-            return .bottom
-        } else {
-            return .center
-        }
+        resolvePaneDropZone(location: location, in: size)
     }
 
     func performDrop(info: DropInfo) -> Bool {
@@ -491,4 +476,46 @@ struct UnifiedPaneDropDelegate: DropDelegate {
         }
         return nil
     }
+}
+
+func resolvePaneDropZone(location: CGPoint, in size: CGSize) -> DropZone {
+    guard size.width > 0, size.height > 0 else { return .center }
+
+    let edgeRatio: CGFloat = 0.25
+    let horizontalEdge = min(max(80, size.width * edgeRatio), size.width / 2)
+    let verticalEdge = min(max(80, size.height * edgeRatio), size.height / 2)
+
+    let isInLeftEdge = location.x < horizontalEdge
+    let isInRightEdge = location.x > size.width - horizontalEdge
+    let isInTopEdge = location.y < verticalEdge
+    let isInBottomEdge = location.y > size.height - verticalEdge
+
+    let horizontalEdgesOverlap = (horizontalEdge * 2) >= size.width
+    let verticalEdgesOverlap = (verticalEdge * 2) >= size.height
+
+    if horizontalEdgesOverlap && !verticalEdgesOverlap {
+        // Narrow panes can otherwise be trapped in left/right zones, making top/bottom
+        // splits unreachable and locking users into vertical-only layouts.
+        if isInTopEdge { return .top }
+        if isInBottomEdge { return .bottom }
+        if isInLeftEdge { return .left }
+        if isInRightEdge { return .right }
+        return .center
+    }
+
+    if verticalEdgesOverlap && !horizontalEdgesOverlap {
+        // Short panes are the symmetric case: keep left/right reachable first.
+        if isInLeftEdge { return .left }
+        if isInRightEdge { return .right }
+        if isInTopEdge { return .top }
+        if isInBottomEdge { return .bottom }
+        return .center
+    }
+
+    // Default behavior: left/right take priority at corners.
+    if isInLeftEdge { return .left }
+    if isInRightEdge { return .right }
+    if isInTopEdge { return .top }
+    if isInBottomEdge { return .bottom }
+    return .center
 }

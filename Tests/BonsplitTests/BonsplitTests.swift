@@ -533,4 +533,38 @@ final class BonsplitTests: XCTestCase {
         XCTAssertEqual(segments.left, 100, accuracy: 0.0001)
         XCTAssertEqual(segments.right, 0, accuracy: 0.0001)
     }
+
+    func testResolvePaneDropZonePrefersTopBottomWhenPaneIsNarrow() {
+        let size = CGSize(width: 140, height: 600)
+
+        XCTAssertEqual(
+            resolvePaneDropZone(location: CGPoint(x: 10, y: 10), in: size),
+            .top
+        )
+        XCTAssertEqual(
+            resolvePaneDropZone(location: CGPoint(x: 130, y: 590), in: size),
+            .bottom
+        )
+        XCTAssertEqual(
+            resolvePaneDropZone(location: CGPoint(x: 10, y: 300), in: size),
+            .left
+        )
+    }
+
+    func testResolvePaneDropZonePrefersLeftRightWhenPaneIsShort() {
+        let size = CGSize(width: 600, height: 140)
+
+        XCTAssertEqual(
+            resolvePaneDropZone(location: CGPoint(x: 10, y: 10), in: size),
+            .left
+        )
+        XCTAssertEqual(
+            resolvePaneDropZone(location: CGPoint(x: 590, y: 130), in: size),
+            .right
+        )
+        XCTAssertEqual(
+            resolvePaneDropZone(location: CGPoint(x: 300, y: 10), in: size),
+            .top
+        )
+    }
 }
