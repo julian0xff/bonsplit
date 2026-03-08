@@ -51,6 +51,11 @@ public final class BonsplitController {
     /// Return `true` when the drop has been handled by the host application.
     @ObservationIgnored public var onExternalTabDrop: ((ExternalTabDropRequest) -> Bool)?
 
+    /// Whether bonsplit is currently handling a local tab drag.
+    public var isTabDragActive: Bool {
+        internalController.draggingTab != nil || internalController.activeDragTab != nil
+    }
+
     // MARK: - Internal State
 
     internal var internalController: SplitViewController

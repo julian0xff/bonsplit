@@ -12,6 +12,15 @@ private class ThemedSplitView: NSSplitView {
 }
 
 #if DEBUG
+private func bonsplitHotPathDebugLogsEnabled() -> Bool {
+    ProcessInfo.processInfo.environment["CMUX_HOT_PATH_DEBUG_LOGS"] == "1"
+}
+
+private func bonsplitHotPathDlog(_ message: @autoclosure () -> String) {
+    guard bonsplitHotPathDebugLogsEnabled() else { return }
+    dlog(message())
+}
+
 private func debugPointString(_ point: NSPoint) -> String {
     let x = Int(point.x.rounded())
     let y = Int(point.y.rounded())
@@ -270,7 +279,7 @@ struct SplitContainerView<Content: View, EmptyContent: View>: NSViewRepresentabl
                     // No animation - just set the position immediately
                     context.coordinator.setPositionSafely(targetPosition, in: splitView, layout: false)
 #if DEBUG
-                    dlog(
+                    bonsplitHotPathDlog(
                         "split.entry.noAnimation split=\(splitDebugToken) orientation=\(orientationToken) " +
                         "origin=\(animationOriginToken) targetPx=\(Int(targetPosition.rounded())) " +
                         "enableAnimations=\(enableAnimations ? 1 : 0)"
@@ -817,7 +826,7 @@ struct SplitContainerView<Content: View, EmptyContent: View>: NSViewRepresentabl
                 guard wasDragging else {
 #if DEBUG
                     let eventType = NSApp.currentEvent.map { String(describing: $0.type) } ?? "none"
-                    dlog(
+                    bonsplitHotPathDlog(
                         "divider.resizeIgnored split=\(splitState.id.uuidString.prefix(5)) eventType=\(eventType) leftDown=\(leftDown ? 1 : 0) isDragging=\(isDragging ? 1 : 0) normalized=\(String(format: "%.3f", normalizedPosition)) model=\(String(format: "%.3f", self.splitState.dividerPosition))"
                     )
 #endif
