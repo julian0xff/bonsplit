@@ -73,7 +73,7 @@ struct TabBarView: View {
     @State private var contentWidth: CGFloat = 0
     @State private var containerWidth: CGFloat = 0
     @State private var selectedTabFrameInBar: CGRect?
-    @State private var isHoveringTabBar = false
+    @State private var isHoveringSplitButtonsArea = false
     @StateObject private var controlKeyMonitor = TabControlShortcutKeyMonitor()
     @AppStorage("paneTabBarControlsVisibilityMode")
     private var controlsVisibilityModeRawValue = TabBarControlsVisibilityMode.always.rawValue
@@ -114,7 +114,7 @@ struct TabBarView: View {
         case .always:
             return true
         case .onHover:
-            return isHoveringTabBar
+            return isHoveringSplitButtonsArea
         }
     }
 
@@ -196,16 +196,7 @@ struct TabBarView: View {
 
             // Split buttons
             if showSplitButtons {
-                splitButtons
-                    .saturation(tabBarSaturation)
-                    .opacity(shouldShowSplitButtonsNow ? 1 : 0)
-                    .allowsHitTesting(shouldShowSplitButtonsNow)
-                    .animation(.easeInOut(duration: TabBarMetrics.hoverDuration), value: shouldShowSplitButtonsNow)
-                    .background {
-                        if !shouldShowSplitButtonsNow && shouldUseTabBarDragRegion && !isTabDragActive {
-                            TabBarWindowDragRegion()
-                        }
-                    }
+                splitButtonsArea
             }
         }
         .frame(height: TabBarMetrics.barHeight)
@@ -240,9 +231,6 @@ struct TabBarView: View {
         }
         .onDisappear {
             controlKeyMonitor.stop()
-        }
-        .onHover { hovering in
-            isHoveringTabBar = hovering
         }
     }
 
@@ -493,6 +481,27 @@ struct TabBarView: View {
     // MARK: - Split Buttons
 
     @ViewBuilder
+    private var splitButtonsArea: some View {
+        ZStack(alignment: .trailing) {
+            if !shouldShowSplitButtonsNow && shouldUseTabBarDragRegion && !isTabDragActive {
+                TabBarWindowDragRegion()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+
+            splitButtons
+                .saturation(tabBarSaturation)
+                .opacity(shouldShowSplitButtonsNow ? 1 : 0)
+                .allowsHitTesting(shouldShowSplitButtonsNow)
+                .animation(.easeInOut(duration: TabBarMetrics.hoverDuration), value: shouldShowSplitButtonsNow)
+        }
+        .contentShape(Rectangle())
+        .onHover { hovering in
+            isHoveringSplitButtonsArea = hovering
+        }
+        .accessibilityIdentifier("paneTabBarControlsRegion")
+    }
+
+    @ViewBuilder
     private var splitButtons: some View {
         let tooltips = controller.configuration.appearance.splitButtonTooltips
         HStack(spacing: 4) {
@@ -503,6 +512,7 @@ struct TabBarView: View {
                     .font(.system(size: 12))
             }
             .buttonStyle(SplitActionButtonStyle(appearance: appearance))
+            .accessibilityIdentifier("paneTabBarControl.newTerminal")
             .safeHelp(tooltips.newTerminal)
 
             Button {
@@ -512,6 +522,7 @@ struct TabBarView: View {
                     .font(.system(size: 12))
             }
             .buttonStyle(SplitActionButtonStyle(appearance: appearance))
+            .accessibilityIdentifier("paneTabBarControl.newBrowser")
             .safeHelp(tooltips.newBrowser)
 
             Button {
@@ -522,6 +533,7 @@ struct TabBarView: View {
                     .font(.system(size: 12))
             }
             .buttonStyle(SplitActionButtonStyle(appearance: appearance))
+            .accessibilityIdentifier("paneTabBarControl.splitRight")
             .safeHelp(tooltips.splitRight)
 
             Button {
@@ -532,6 +544,7 @@ struct TabBarView: View {
                     .font(.system(size: 12))
             }
             .buttonStyle(SplitActionButtonStyle(appearance: appearance))
+            .accessibilityIdentifier("paneTabBarControl.splitDown")
             .safeHelp(tooltips.splitDown)
         }
         .padding(.trailing, 8)
