@@ -459,14 +459,16 @@ struct TabBarView: View {
             .buttonStyle(SplitActionButtonStyle(appearance: appearance))
             .safeHelp(tooltips.newTerminal)
 
-            Button {
-                controller.requestNewTab(kind: "browser", inPane: pane.id)
-            } label: {
-                Image(systemName: "globe")
-                    .font(.system(size: 12))
+            if appearance.showBrowserButton {
+                Button {
+                    controller.requestNewTab(kind: "browser", inPane: pane.id)
+                } label: {
+                    Image(systemName: "globe")
+                        .font(.system(size: 12))
+                }
+                .buttonStyle(SplitActionButtonStyle(appearance: appearance))
+                .safeHelp(tooltips.newBrowser)
             }
-            .buttonStyle(SplitActionButtonStyle(appearance: appearance))
-            .safeHelp(tooltips.newBrowser)
 
             Button {
                 // 120fps animation handled by SplitAnimator

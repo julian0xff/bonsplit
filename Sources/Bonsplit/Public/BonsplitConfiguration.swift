@@ -169,6 +169,9 @@ extension BonsplitConfiguration {
         /// Whether to show split buttons in the tab bar
         public var showSplitButtons: Bool
 
+        /// Whether to show the browser button in the tab bar action buttons
+        public var showBrowserButton: Bool
+
         /// Tooltip text for the tab bar's right-side action buttons
         public var splitButtonTooltips: SplitButtonTooltips
 
@@ -212,6 +215,7 @@ extension BonsplitConfiguration {
             minimumPaneWidth: CGFloat = 100,
             minimumPaneHeight: CGFloat = 100,
             showSplitButtons: Bool = true,
+            showBrowserButton: Bool = true,
             splitButtonTooltips: SplitButtonTooltips = .default,
             animationDuration: Double = 0.15,
             enableAnimations: Bool = true,
@@ -224,6 +228,7 @@ extension BonsplitConfiguration {
             self.minimumPaneWidth = minimumPaneWidth
             self.minimumPaneHeight = minimumPaneHeight
             self.showSplitButtons = showSplitButtons
+            self.showBrowserButton = showBrowserButton
             self.splitButtonTooltips = splitButtonTooltips
             self.animationDuration = animationDuration
             self.enableAnimations = enableAnimations
