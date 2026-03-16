@@ -744,25 +744,17 @@ public final class BonsplitController {
     /// - Parameters:
     ///   - position: The new divider position (clamped to 0.1-0.9)
     ///   - splitId: The UUID of the split to update
-    ///   - fromExternal: Set to true to suppress outgoing notifications (prevents loops)
+    ///   - notify: Whether to trigger a geometry change notification (default true). Set to false when batching multiple position changes.
     /// - Returns: true if the split was found and updated
     @discardableResult
-    public func setDividerPosition(_ position: CGFloat, forSplit splitId: UUID, fromExternal: Bool = false) -> Bool {
+    public func setDividerPosition(_ position: CGFloat, forSplit splitId: UUID, notify: Bool = true) -> Bool {
         guard let split = internalController.findSplit(splitId) else { return false }
-
-        if fromExternal {
-            internalController.isExternalUpdateInProgress = true
-        }
 
         // Clamp position to valid range
         let clampedPosition = min(max(position, 0.1), 0.9)
         split.dividerPosition = clampedPosition
-
-        if fromExternal {
-            // Use a slight delay to allow the UI to update before re-enabling notifications
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
-                self?.internalController.isExternalUpdateInProgress = false
-            }
+        if notify {
+            notifyGeometryChange()
         }
 
         return true
@@ -773,11 +765,9 @@ public final class BonsplitController {
         internalController.containerFrame = frame
     }
 
-    /// Notify geometry change to delegate (internal use)
+    /// Notify geometry change to delegate.
     /// - Parameter isDragging: Whether the change is due to active divider dragging
-    internal func notifyGeometryChange(isDragging: Bool = false) {
-        guard !internalController.isExternalUpdateInProgress else { return }
-
+    public func notifyGeometryChange(isDragging: Bool = false) {
         // If dragging, check if delegate wants notifications during drag
         if isDragging {
             let shouldNotify = delegate?.splitTabBar(self, shouldNotifyDuringDrag: true) ?? false

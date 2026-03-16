@@ -48,9 +48,6 @@ final class SplitViewController {
     /// Current frame of the entire split view container
     var containerFrame: CGRect = .zero
 
-    /// Flag to prevent notification loops during external updates
-    var isExternalUpdateInProgress: Bool = false
-
     /// Timestamp of last geometry notification for debouncing
     var lastGeometryNotificationTime: TimeInterval = 0
 
