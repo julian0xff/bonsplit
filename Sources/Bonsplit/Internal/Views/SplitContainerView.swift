@@ -348,9 +348,20 @@ struct SplitContainerView<Content: View, EmptyContent: View>: NSViewRepresentabl
         }
 
         // Access dividerPosition to ensure SwiftUI tracks this dependency
-        // Then sync if the position changed externally
+        // Then sync if the position changed externally.
+        // Skip during batch updates (e.g., equalize splits) to avoid interleaved
+        // layout passes that compete with the batch algorithm.
+        // Reading batchUpdateGeneration forces SwiftUI to re-evaluate after batch completes.
+        let _ = controller.batchUpdateGeneration
         let currentPosition = splitState.dividerPosition
-        context.coordinator.syncPosition(currentPosition, in: splitView)
+        if !controller.isBatchUpdating {
+            context.coordinator.syncPosition(currentPosition, in: splitView)
+        }
+        #if DEBUG
+        if controller.isBatchUpdating {
+            dlog("split.syncSkipped batch=true pos=\(String(format: "%.4f", currentPosition)) split=\(String(splitState.id.uuidString.prefix(5)))")
+        }
+        #endif
     }
 
     // MARK: - Helpers

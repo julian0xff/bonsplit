@@ -55,6 +55,10 @@ public final class BonsplitController {
     /// Internal host-driven closes should not use this hook.
     @ObservationIgnored public var onTabCloseRequest: ((_ tabId: TabID, _ paneId: PaneID) -> Void)?
 
+    /// When true, SplitContainerView skips divider position sync in updateNSView.
+    /// Used to batch multiple setDividerPosition calls without interleaved SwiftUI layout.
+    @ObservationIgnored public private(set) var isBatchUpdating: Bool = false
+
     // MARK: - Internal State
 
     internal var internalController: SplitViewController
@@ -758,6 +762,18 @@ public final class BonsplitController {
         }
 
         return true
+    }
+
+    /// Execute a block that sets multiple divider positions without interleaved SwiftUI layout.
+    /// After the block completes, `notifyGeometryChange()` is called once.
+    public func performBatchUpdate(_ block: () -> Void) {
+        isBatchUpdating = true
+        internalController.isBatchUpdating = true
+        block()
+        internalController.isBatchUpdating = false
+        isBatchUpdating = false
+        internalController.batchUpdateGeneration += 1
+        notifyGeometryChange()
     }
 
     /// Update container frame (called when window moves/resizes)

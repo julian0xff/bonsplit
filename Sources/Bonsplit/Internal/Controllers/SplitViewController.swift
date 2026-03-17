@@ -36,6 +36,13 @@ final class SplitViewController {
     /// updateNSView is called to toggle isHidden on the AppKit containers.
     var isInteractive: Bool = true
 
+    /// When true, SplitContainerView skips divider position sync in updateNSView.
+    /// Set by BonsplitController.performBatchUpdate to prevent interleaved layout.
+    @ObservationIgnored var isBatchUpdating: Bool = false
+
+    /// Bumped after batch updates to force SwiftUI to re-sync divider positions.
+    var batchUpdateGeneration: Int = 0
+
     /// Handler for file/URL drops from external apps (e.g. Finder).
     /// Receives the dropped URLs and the pane ID where the drop occurred.
     @ObservationIgnored var onFileDrop: ((_ urls: [URL], _ paneId: PaneID) -> Bool)?
