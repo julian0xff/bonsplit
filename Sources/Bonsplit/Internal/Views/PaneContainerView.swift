@@ -154,6 +154,7 @@ struct PaneContainerView<Content: View, EmptyContent: View>: View {
     let contentBuilder: (TabItem, PaneID) -> Content
     let emptyPaneBuilder: (PaneID) -> EmptyContent
     var showSplitButtons: Bool = true
+    var hideSingleTabBar: Bool = false
     var contentViewLifecycle: ContentViewLifecycle = .recreateOnSwitch
 
     @State private var activeDropZone: DropZone?
@@ -171,14 +172,19 @@ struct PaneContainerView<Content: View, EmptyContent: View>: View {
         controller.draggingTab != nil || controller.activeDragTab != nil
     }
 
+    private var shouldShowTabBar: Bool {
+        !hideSingleTabBar || pane.tabs.count > 1
+    }
+
     var body: some View {
         VStack(spacing: 0) {
-            // Tab bar
-            TabBarView(
-                pane: pane,
-                isFocused: isFocused,
-                showSplitButtons: showSplitButtons
-            )
+            if shouldShowTabBar {
+                TabBarView(
+                    pane: pane,
+                    isFocused: isFocused,
+                    showSplitButtons: showSplitButtons
+                )
+            }
 
             // Content area with drop zones
             contentAreaWithDropZones

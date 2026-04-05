@@ -169,6 +169,9 @@ extension BonsplitConfiguration {
         /// Whether to show split buttons in the tab bar
         public var showSplitButtons: Bool
 
+        /// Whether to hide the tab bar when a pane only contains a single tab.
+        public var hideSingleTabBar: Bool
+
         /// Whether to show the browser button in the tab bar action buttons
         public var showBrowserButton: Bool
 
@@ -215,6 +218,7 @@ extension BonsplitConfiguration {
             minimumPaneWidth: CGFloat = 100,
             minimumPaneHeight: CGFloat = 100,
             showSplitButtons: Bool = true,
+            hideSingleTabBar: Bool = false,
             showBrowserButton: Bool = true,
             splitButtonTooltips: SplitButtonTooltips = .default,
             animationDuration: Double = 0.15,
@@ -228,6 +232,7 @@ extension BonsplitConfiguration {
             self.minimumPaneWidth = minimumPaneWidth
             self.minimumPaneHeight = minimumPaneHeight
             self.showSplitButtons = showSplitButtons
+            self.hideSingleTabBar = hideSingleTabBar
             self.showBrowserButton = showBrowserButton
             self.splitButtonTooltips = splitButtonTooltips
             self.animationDuration = animationDuration
