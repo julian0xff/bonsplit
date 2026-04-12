@@ -229,7 +229,6 @@ struct SplitContainerView<Content: View, EmptyContent: View>: NSViewRepresentabl
 
             if animationOrigin != nil {
                 let targetPosition = availableSize * 0.5
-                splitState.dividerPosition = 0.5
 
                 if shouldAnimate {
                     // Position at edge while new pane is hidden
@@ -256,13 +255,13 @@ struct SplitContainerView<Content: View, EmptyContent: View>: NSViewRepresentabl
                             duration: duration
                         ) {
                             context.coordinator.isAnimating = false
-                            // Re-assert exact 0.5 ratio to prevent pixel-rounding drift
-                            splitState.dividerPosition = 0.5
+                            // Keep the coordinator aligned to the model's existing 0.5 ratio
+                            // without mutating observable split state during initial mount.
                             context.coordinator.lastAppliedPosition = 0.5
 #if DEBUG
                             dlog(
                                 "split.entry.complete split=\(splitDebugToken) orientation=\(orientationToken) " +
-                                "origin=\(animationOriginToken) finalRatio=\(String(format: "%.3f", splitState.dividerPosition))"
+                                "origin=\(animationOriginToken) finalRatio=0.500"
                             )
 #endif
                         }
@@ -356,7 +355,10 @@ struct SplitContainerView<Content: View, EmptyContent: View>: NSViewRepresentabl
         let _ = controller.batchUpdateGeneration
         let currentPosition = splitState.dividerPosition
         if !controller.isBatchUpdating {
-            context.coordinator.syncPosition(currentPosition, in: splitView)
+            DispatchQueue.main.async { [weak splitView, coordinator = context.coordinator] in
+                guard let splitView else { return }
+                coordinator.syncPosition(currentPosition, in: splitView)
+            }
         }
         #if DEBUG
         if controller.isBatchUpdating {
@@ -842,12 +844,14 @@ struct SplitContainerView<Content: View, EmptyContent: View>: NSViewRepresentabl
                     )
 #endif
                     let statePosition = self.splitState.dividerPosition
-                    // Re-assert synchronously. setPositionSafely sets isSyncingProgrammatically=true,
-                    // so the recursive splitViewDidResizeSubviews call is caught by the guard above.
-                    // Deferring to the next runloop turn would allow the transient frame to propagate
-                    // through SwiftUI layout → ghostty terminal resize → reflow, causing content shifts.
-                    self.syncPosition(statePosition, in: splitView)
-                    self.onGeometryChange?(false)
+                    DispatchQueue.main.async { [weak self, weak splitView] in
+                        guard let self, let splitView else { return }
+                        self.syncPosition(statePosition, in: splitView)
+                    }
+                    Task { @MainActor [weak self] in
+                        await Task.yield()
+                        self?.onGeometryChange?(false)
+                    }
                     return
                 }
 

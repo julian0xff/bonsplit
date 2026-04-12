@@ -273,12 +273,19 @@ struct TabItemView: View {
     private func updateGlobeFallback() {
         // Track load transitions so we can avoid an "empty placeholder -> globe" flash on brand-new tabs.
         if lastIsLoadingObserved && !tab.isLoading {
-            lastLoadingStoppedAt = Date()
+            let now = Date()
+            if lastLoadingStoppedAt != now {
+                lastLoadingStoppedAt = now
+            }
         }
-        lastIsLoadingObserved = tab.isLoading
+        if lastIsLoadingObserved != tab.isLoading {
+            lastIsLoadingObserved = tab.isLoading
+        }
 
-        globeFallbackWorkItem?.cancel()
-        globeFallbackWorkItem = nil
+        if globeFallbackWorkItem != nil {
+            globeFallbackWorkItem?.cancel()
+            globeFallbackWorkItem = nil
+        }
 
         // Only delay the globe fallback right after a navigation completes, when a favicon is likely to
         // arrive soon. Otherwise (e.g. a brand-new tab), show the globe immediately.
@@ -288,13 +295,19 @@ struct TabItemView: View {
         }()
         let shouldDelayGlobe = (tab.icon == "globe") && (tab.iconImageData == nil) && !tab.isLoading && recentlyStoppedLoading
         if !shouldDelayGlobe {
-            showGlobeFallback = true
+            if !showGlobeFallback {
+                showGlobeFallback = true
+            }
             return
         }
 
-        showGlobeFallback = false
+        if showGlobeFallback {
+            showGlobeFallback = false
+        }
         let work = DispatchWorkItem {
-            showGlobeFallback = true
+            if !showGlobeFallback {
+                showGlobeFallback = true
+            }
         }
         globeFallbackWorkItem = work
         // Give favicon fetches a little longer before showing the globe fallback to reduce brief flashes.

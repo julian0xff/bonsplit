@@ -6,13 +6,31 @@ import SwiftUI
 @MainActor
 final class SplitViewController {
     /// The root node of the split tree
-    var rootNode: SplitNode
+    var rootNode: SplitNode {
+        didSet {
+#if DEBUG
+            dlog("split.observable.write field=rootNode paneCount=\(rootNode.allPaneIds.count)")
+#endif
+        }
+    }
 
     /// Currently zoomed pane. When set, rendering should only show this pane.
-    var zoomedPaneId: PaneID?
+    var zoomedPaneId: PaneID? {
+        didSet {
+#if DEBUG
+            dlog("split.observable.write field=zoomedPaneId value=\(zoomedPaneId?.id.uuidString.prefix(5) ?? "nil")")
+#endif
+        }
+    }
 
     /// Currently focused pane ID
-    var focusedPaneId: PaneID?
+    var focusedPaneId: PaneID? {
+        didSet {
+#if DEBUG
+            dlog("split.observable.write field=focusedPaneId value=\(focusedPaneId?.id.uuidString.prefix(5) ?? "nil")")
+#endif
+        }
+    }
 
     /// Tab currently being dragged (for visual feedback and hit-testing).
     /// This is @Observable so SwiftUI views react (e.g. allowsHitTesting).
@@ -52,14 +70,15 @@ final class SplitViewController {
     var dragHiddenSourceTabId: UUID?
     var dragHiddenSourcePaneId: PaneID?
 
-    /// Current frame of the entire split view container
-    var containerFrame: CGRect = .zero
+    /// Current frame of the entire split view container.
+    /// Internal geometry bookkeeping only; not a rendered SwiftUI dependency.
+    @ObservationIgnored var containerFrame: CGRect = .zero
 
     /// Timestamp of last geometry notification for debouncing
-    var lastGeometryNotificationTime: TimeInterval = 0
+    @ObservationIgnored var lastGeometryNotificationTime: TimeInterval = 0
 
     /// Callback for geometry changes
-    var onGeometryChange: (() -> Void)?
+    @ObservationIgnored var onGeometryChange: (() -> Void)?
 
     init(rootNode: SplitNode? = nil) {
         if let rootNode {

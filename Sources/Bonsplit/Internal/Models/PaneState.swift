@@ -5,8 +5,20 @@ import SwiftUI
 @Observable
 final class PaneState: Identifiable {
     let id: PaneID
-    var tabs: [TabItem]
-    var selectedTabId: UUID?
+    var tabs: [TabItem] {
+        didSet {
+#if DEBUG
+            dlog("pane.observable.write field=tabs pane=\(id.id.uuidString.prefix(5)) count=\(tabs.count)")
+#endif
+        }
+    }
+    var selectedTabId: UUID? {
+        didSet {
+#if DEBUG
+            dlog("pane.observable.write field=selectedTabId pane=\(id.id.uuidString.prefix(5)) value=\(selectedTabId?.uuidString.prefix(5) ?? "nil")")
+#endif
+        }
+    }
 
     init(
         id: PaneID = PaneID(),

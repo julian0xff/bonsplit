@@ -32,8 +32,24 @@ struct SplitViewContainer<Content: View, EmptyContent: View>: View {
     private func updateContainerFrame(geometry: GeometryProxy) {
         // Get frame in global coordinate space
         let frame = geometry.frame(in: .global)
-        controller.containerFrame = frame
-        onGeometryChange?(false)  // Container resize is not a drag
+        let previousFrame = controller.containerFrame
+        let frameChanged =
+            abs(previousFrame.origin.x - frame.origin.x) > 0.5 ||
+            abs(previousFrame.origin.y - frame.origin.y) > 0.5 ||
+            abs(previousFrame.size.width - frame.size.width) > 0.5 ||
+            abs(previousFrame.size.height - frame.size.height) > 0.5
+        guard frameChanged else { return }
+
+        DispatchQueue.main.async {
+            let latestFrame = controller.containerFrame
+            let stillChanged =
+                abs(latestFrame.origin.x - frame.origin.x) > 0.5 ||
+                abs(latestFrame.origin.y - frame.origin.y) > 0.5 ||
+                abs(latestFrame.size.width - frame.size.width) > 0.5 ||
+                abs(latestFrame.size.height - frame.size.height) > 0.5
+            guard stillChanged else { return }
+            controller.containerFrame = frame
+        }
     }
 
     @ViewBuilder

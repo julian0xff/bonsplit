@@ -16,8 +16,10 @@ final class SplitState: Identifiable {
     var second: SplitNode
     var dividerPosition: CGFloat  // 0.0 to 1.0
 
-    /// Animation origin for entry animation (nil = no animation needed)
-    var animationOrigin: SplitAnimationOrigin?
+    /// One-shot bootstrap hint for split entry animation (nil = no animation needed).
+    /// This is consumed by the AppKit host during initial mount and should not trigger
+    /// follow-up SwiftUI observation work when it gets cleared.
+    @ObservationIgnored var animationOrigin: SplitAnimationOrigin?
 
     init(
         id: UUID = UUID(),

@@ -98,6 +98,49 @@ struct TabBarView: View {
         isFocused && controlKeyMonitor.isShortcutHintVisible
     }
 
+    private func scheduleScrollMetricsUpdate(offset: CGFloat, width: CGFloat) {
+        let offsetChanged = abs(scrollOffset - offset) > 0.5
+        let widthChanged = abs(contentWidth - width) > 0.5
+        guard offsetChanged || widthChanged else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
+            if abs(scrollOffset - offset) > 0.5 {
+#if DEBUG
+                dlog("tabbar.state.write field=scrollOffset value=\(Int(offset.rounded()))")
+#endif
+                scrollOffset = offset
+            }
+            if abs(contentWidth - width) > 0.5 {
+#if DEBUG
+                dlog("tabbar.state.write field=contentWidth value=\(Int(width.rounded()))")
+#endif
+                contentWidth = width
+            }
+        }
+    }
+
+    private func scheduleContainerWidthUpdate(_ width: CGFloat) {
+        guard abs(containerWidth - width) > 0.5 else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
+            guard abs(containerWidth - width) > 0.5 else { return }
+#if DEBUG
+            dlog("tabbar.state.write field=containerWidth value=\(Int(width.rounded()))")
+#endif
+            containerWidth = width
+        }
+    }
+
+    private func scheduleSelectedTabFrameUpdate(_ frame: CGRect?) {
+        guard selectedTabFrameInBar != frame else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
+            guard selectedTabFrameInBar != frame else { return }
+#if DEBUG
+            let token = frame.map { "\(Int($0.origin.x.rounded())):\(Int($0.size.width.rounded()))" } ?? "nil"
+            dlog("tabbar.state.write field=selectedTabFrame value=\(token)")
+#endif
+            selectedTabFrameInBar = frame
+        }
+    }
+
     var body: some View {
         HStack(spacing: 0) {
             // Scrollable tabs with fade overlays
@@ -123,13 +166,17 @@ struct TabBarView: View {
                             GeometryReader { contentGeo in
                                 Color.clear
                                     .onChange(of: contentGeo.frame(in: .named("tabScroll"))) { _, newFrame in
-                                        scrollOffset = -newFrame.minX
-                                        contentWidth = newFrame.width
+                                        scheduleScrollMetricsUpdate(
+                                            offset: -newFrame.minX,
+                                            width: newFrame.width
+                                        )
                                     }
                                     .onAppear {
                                         let frame = contentGeo.frame(in: .named("tabScroll"))
-                                        scrollOffset = -frame.minX
-                                        contentWidth = frame.width
+                                        scheduleScrollMetricsUpdate(
+                                            offset: -frame.minX,
+                                            width: frame.width
+                                        )
                                     }
                             }
                         )
@@ -154,13 +201,13 @@ struct TabBarView: View {
                     }
                     .coordinateSpace(name: "tabScroll")
                     .onAppear {
-                        containerWidth = containerGeo.size.width
+                        scheduleContainerWidthUpdate(containerGeo.size.width)
                         if let tabId = pane.selectedTabId {
                             proxy.scrollTo(tabId, anchor: .center)
                         }
                     }
                     .onChange(of: containerGeo.size.width) { _, newWidth in
-                        containerWidth = newWidth
+                        scheduleContainerWidthUpdate(newWidth)
                     }
                     .onChange(of: pane.selectedTabId) { _, newTabId in
                         if let tabId = newTabId {
@@ -207,13 +254,17 @@ struct TabBarView: View {
             }
         }
         .onAppear {
-            controlKeyMonitor.start()
+            DispatchQueue.main.async {
+                controlKeyMonitor.start()
+            }
         }
         .onPreferenceChange(SelectedTabFramePreferenceKey.self) { frame in
-            selectedTabFrameInBar = frame
+            scheduleSelectedTabFrameUpdate(frame)
         }
         .onDisappear {
-            controlKeyMonitor.stop()
+            DispatchQueue.main.async {
+                controlKeyMonitor.stop()
+            }
         }
     }
 
