@@ -191,6 +191,10 @@ extension BonsplitConfiguration {
         /// Optional color overrides for tab/pane chrome.
         public var chromeColors: ChromeColors
 
+        /// Optional native split divider thickness in points.
+        /// When unset, Bonsplit uses AppKit's native NSSplitView thickness.
+        public var dividerThickness: CGFloat?
+
         // MARK: - Presets
 
         public static let `default` = Appearance()
@@ -223,7 +227,8 @@ extension BonsplitConfiguration {
             splitButtonTooltips: SplitButtonTooltips = .default,
             animationDuration: Double = 0.15,
             enableAnimations: Bool = true,
-            chromeColors: ChromeColors = .init()
+            chromeColors: ChromeColors = .init(),
+            dividerThickness: CGFloat? = nil
         ) {
             self.tabBarHeight = tabBarHeight
             self.tabMinWidth = tabMinWidth
@@ -238,6 +243,7 @@ extension BonsplitConfiguration {
             self.animationDuration = animationDuration
             self.enableAnimations = enableAnimations
             self.chromeColors = chromeColors
+            self.dividerThickness = dividerThickness
         }
     }
 }

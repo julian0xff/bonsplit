@@ -5,9 +5,35 @@ private var splitContainerProgrammaticSyncDepth = 0
 
 private class ThemedSplitView: NSSplitView {
     var customDividerColor: NSColor?
+    var customDividerThickness: CGFloat?
 
     override var dividerColor: NSColor {
         customDividerColor ?? super.dividerColor
+    }
+
+    override var dividerThickness: CGFloat {
+        customDividerThickness ?? super.dividerThickness
+    }
+
+    override func drawDivider(in rect: NSRect) {
+        guard customDividerThickness != nil else {
+            super.drawDivider(in: rect)
+            return
+        }
+
+        dividerColor.setFill()
+        rect.fill()
+    }
+}
+
+private func dividerColorsEqual(_ lhs: NSColor?, _ rhs: NSColor?) -> Bool {
+    switch (lhs?.usingColorSpace(.sRGB), rhs?.usingColorSpace(.sRGB)) {
+    case (nil, nil):
+        return true
+    case let (lhs?, rhs?):
+        return lhs.isEqual(rhs)
+    default:
+        return false
     }
 }
 
@@ -112,6 +138,7 @@ struct SplitContainerView<Content: View, EmptyContent: View>: NSViewRepresentabl
         let splitView = ThemedSplitView()
 #endif
         splitView.customDividerColor = TabBarColors.nsColorSeparator(for: appearance)
+        splitView.customDividerThickness = appearance.dividerThickness
         splitView.isVertical = splitState.orientation == .horizontal
         splitView.dividerStyle = .thin
         splitView.delegate = context.coordinator
@@ -309,7 +336,23 @@ struct SplitContainerView<Content: View, EmptyContent: View>: NSViewRepresentabl
         splitView.isHidden = !controller.isInteractive
         splitView.wantsLayer = true
         splitView.layer?.backgroundColor = chromeBackgroundColor.cgColor
-        (splitView as? ThemedSplitView)?.customDividerColor = TabBarColors.nsColorSeparator(for: appearance)
+        if let themedSplitView = splitView as? ThemedSplitView {
+            let nextDividerColor = TabBarColors.nsColorSeparator(for: appearance)
+            let nextDividerThickness = appearance.dividerThickness
+            let dividerColorChanged = !dividerColorsEqual(themedSplitView.customDividerColor, nextDividerColor)
+            let dividerThicknessChanged = themedSplitView.customDividerThickness != nextDividerThickness
+
+            themedSplitView.customDividerColor = nextDividerColor
+            themedSplitView.customDividerThickness = nextDividerThickness
+
+            if dividerColorChanged || dividerThicknessChanged {
+                themedSplitView.needsDisplay = true
+            }
+
+            if dividerThicknessChanged {
+                themedSplitView.adjustSubviews()
+            }
+        }
 
         // Update orientation if changed
         splitView.isVertical = splitState.orientation == .horizontal
