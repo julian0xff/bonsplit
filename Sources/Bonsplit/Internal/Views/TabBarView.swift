@@ -872,10 +872,12 @@ private final class TabControlShortcutKeyMonitor: ObservableObject {
     }
 
     private func cancelPendingHintShow(resetVisible: Bool) {
-        pendingShowWorkItem?.cancel()
-        pendingShowWorkItem = nil
-        pendingModifier = nil
-        if resetVisible {
+        if pendingShowWorkItem != nil || pendingModifier != nil {
+            pendingShowWorkItem?.cancel()
+            pendingShowWorkItem = nil
+            pendingModifier = nil
+        }
+        if resetVisible, isShortcutHintVisible {
             withAnimation(.easeInOut(duration: 0.14)) {
                 isShortcutHintVisible = false
             }
